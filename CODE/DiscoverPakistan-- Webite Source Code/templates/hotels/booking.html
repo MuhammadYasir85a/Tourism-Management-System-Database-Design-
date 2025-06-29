@@ -1,0 +1,408 @@
+{% extends "base.html" %}
+
+{% block title %}Book {{ hotel.name }} - Pakistan Tourism{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<section class="bg-primary-gradient text-white py-4">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}" class="text-white">Home</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('hotels.index') }}" class="text-white">Hotels</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('hotels.detail', hotel_id=hotel.hotelID) }}" class="text-white">{{ hotel.name }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Book Now</li>
+            </ol>
+        </nav>
+        
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="h2 mb-0">Book Your Stay</h1>
+                <p class="mb-0">{{ hotel.name }}, {{ hotel.city }}</p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <i class="fas fa-calendar-check fa-3x"></i>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Booking Form -->
+<section class="section-padding">
+    <div class="container">
+        <div class="row">
+            <!-- Booking Form -->
+            <div class="col-lg-8">
+                <div class="card shadow-lg border-0">
+                    <div class="card-header bg-light-custom">
+                        <h4 class="card-title mb-0">
+                            <i class="fas fa-edit text-primary-custom me-2"></i>
+                            Booking Details
+                        </h4>
+                    </div>
+                    <div class="card-body p-4">
+                        <form method="POST" class="needs-validation" novalidate>
+                            {{ form.hidden_tag() }}
+                            
+                            <!-- Guest Information -->
+                            <div class="mb-4">
+                                <h5 class="fw-bold mb-3">
+                                    <i class="fas fa-user me-2"></i>Guest Information
+                                </h5>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Guest Name</label>
+                                            <input type="text" class="form-control" value="{{ current_user.name }}" readonly>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Email Address</label>
+                                            <input type="email" class="form-control" value="{{ current_user.email }}" readonly>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Booking Dates -->
+                            <div class="mb-4">
+                                <h5 class="fw-bold mb-3">
+                                    <i class="fas fa-calendar me-2"></i>Stay Dates
+                                </h5>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            {{ form.checkInDate.label(class="form-label") }}
+                                            {{ form.checkInDate(class="form-control", required=True) }}
+                                            {% if form.checkInDate.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {% for error in form.checkInDate.errors %}
+                                                        {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            {{ form.checkOutDate.label(class="form-label") }}
+                                            {{ form.checkOutDate(class="form-control", required=True) }}
+                                            {% if form.checkOutDate.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {% for error in form.checkOutDate.errors %}
+                                                        {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="nightsCalculation" class="text-muted-custom small"></div>
+                            </div>
+                            
+                            <!-- Room Selection -->
+                            <div class="mb-4">
+                                <h5 class="fw-bold mb-3">
+                                    <i class="fas fa-bed me-2"></i>Room Selection
+                                </h5>
+                                <div class="mb-3">
+                                    {{ form.roomType.label(class="form-label") }}
+                                    {{ form.roomType(class="form-select", id="roomTypeSelect") }}
+                                    {% if form.roomType.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.roomType.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Room Type Info -->
+                                <div class="room-info bg-light-custom p-3 rounded">
+                                    <div id="standardInfo" class="room-type-info">
+                                        <h6>Standard Room</h6>
+                                        <p class="mb-1">Comfortable accommodation with essential amenities</p>
+                                        <strong class="text-primary-custom">PKR 3,000 per night</strong>
+                                    </div>
+                                    <div id="deluxeInfo" class="room-type-info d-none">
+                                        <h6>Deluxe Room</h6>
+                                        <p class="mb-1">Spacious room with premium amenities and city view</p>
+                                        <strong class="text-primary-custom">PKR 4,500 per night</strong>
+                                    </div>
+                                    <div id="executiveInfo" class="room-type-info d-none">
+                                        <h6>Executive Room</h6>
+                                        <p class="mb-1">Business-class accommodation with work area</p>
+                                        <strong class="text-primary-custom">PKR 6,000 per night</strong>
+                                    </div>
+                                    <div id="suiteInfo" class="room-type-info d-none">
+                                        <h6>Suite</h6>
+                                        <p class="mb-1">Luxurious suite with separate living area</p>
+                                        <strong class="text-primary-custom">PKR 7,500 per night</strong>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Special Requests -->
+                            <div class="mb-4">
+                                <h5 class="fw-bold mb-3">
+                                    <i class="fas fa-comment me-2"></i>Special Requests (Optional)
+                                </h5>
+                                <textarea class="form-control" name="special_requests" rows="3" 
+                                          placeholder="Any special requests or requirements..."></textarea>
+                            </div>
+                            
+                            <!-- Terms and Conditions -->
+                            <div class="mb-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="agreeTerms" required>
+                                    <label class="form-check-label" for="agreeTerms">
+                                        I agree to the <a href="#" class="text-decoration-none">Terms and Conditions</a> 
+                                        and <a href="#" class="text-decoration-none">Cancellation Policy</a>
+                                    </label>
+                                    <div class="invalid-feedback">
+                                        You must agree to the terms and conditions
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Submit Button -->
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-success btn-lg">
+                                    <i class="fas fa-credit-card me-2"></i>
+                                    Confirm Booking
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Booking Summary -->
+            <div class="col-lg-4">
+                <!-- Hotel Summary -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary-gradient text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-hotel me-2"></i>Hotel Details
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <img src="{{ hotel.imageURL or 'https://via.placeholder.com/300x200?text=No+Image' }}" 
+                             alt="{{ hotel.name }}" 
+                             class="img-fluid rounded mb-3"
+                             style="height: 150px; width: 100%; object-fit: cover;">
+                        
+                        <h6 class="fw-bold">{{ hotel.name }}</h6>
+                        <p class="text-muted-custom mb-2">
+                            <i class="fas fa-map-marker-alt me-1"></i>
+                            {{ hotel.street }}, {{ hotel.city }}
+                        </p>
+                        
+                        <div class="rating mb-2" data-rating="4.3">
+                            {% for i in range(5) %}
+                            <i class="star far fa-star text-warning"></i>
+                            {% endfor %}
+                            <span class="ms-1 small text-muted-custom">4.3/5</span>
+                        </div>
+                        
+                        {% if hotel.facilities %}
+                        <hr>
+                        <h6 class="small fw-semibold text-muted-custom mb-2">FACILITIES</h6>
+                        <p class="small mb-0">{{ hotel.facilities[:80] }}...</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Booking Summary -->
+                <div class="card mb-4">
+                    <div class="card-header bg-light-custom">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-receipt me-2"></i>Booking Summary
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="bookingSummary">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Check-in:</span>
+                                <span id="summaryCheckin">-</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Check-out:</span>
+                                <span id="summaryCheckout">-</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Nights:</span>
+                                <span id="summaryNights">-</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Room Type:</span>
+                                <span id="summaryRoomType">Standard</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Rate per night:</span>
+                                <span id="summaryRate">PKR 3,000</span>
+                            </div>
+                            <hr>
+                            <div class="d-flex justify-content-between fw-bold text-primary-custom">
+                                <span>Total Amount:</span>
+                                <span id="summaryTotal">PKR 0</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <small class="text-muted-custom">
+                                * Taxes and service charges may apply<br>
+                                * Free cancellation up to 24 hours before check-in
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Contact Information -->
+                <div class="card">
+                    <div class="card-header bg-light-custom">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-headset me-2"></i>Need Help?
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-2">
+                            <i class="fas fa-phone text-primary-custom me-2"></i>
+                            <strong>Call us:</strong> +92 21 1234567
+                        </p>
+                        <p class="mb-0">
+                            <i class="fas fa-envelope text-primary-custom me-2"></i>
+                            <strong>Email:</strong> support@paktourism.com
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const checkinInput = document.getElementById('checkInDate');
+    const checkoutInput = document.getElementById('checkOutDate');
+    const roomTypeSelect = document.getElementById('roomTypeSelect');
+    const nightsCalculation = document.getElementById('nightsCalculation');
+    
+    // Room type rates
+    const roomRates = {
+        'Standard': 3000,
+        'Deluxe': 4500,
+        'Executive': 6000,
+        'Suite': 7500
+    };
+    
+    // Set minimum dates
+    const today = new Date().toISOString().split('T')[0];
+    checkinInput.min = today;
+    
+    // Update checkout minimum date when checkin changes
+    checkinInput.addEventListener('change', function() {
+        const checkinDate = new Date(this.value);
+        const minCheckout = new Date(checkinDate);
+        minCheckout.setDate(minCheckout.getDate() + 1);
+        checkoutInput.min = minCheckout.toISOString().split('T')[0];
+        
+        updateSummary();
+        calculateNights();
+    });
+    
+    checkoutInput.addEventListener('change', function() {
+        updateSummary();
+        calculateNights();
+    });
+    
+    roomTypeSelect.addEventListener('change', function() {
+        showRoomInfo(this.value);
+        updateSummary();
+    });
+    
+    function calculateNights() {
+        if (checkinInput.value && checkoutInput.value) {
+            const checkin = new Date(checkinInput.value);
+            const checkout = new Date(checkoutInput.value);
+            const timeDiff = checkout.getTime() - checkin.getTime();
+            const nights = Math.ceil(timeDiff / (1000 * 3600 * 24));
+            
+            if (nights > 0) {
+                nightsCalculation.textContent = `Total stay: ${nights} night${nights > 1 ? 's' : ''}`;
+                nightsCalculation.className = 'text-success small';
+            } else {
+                nightsCalculation.textContent = 'Check-out must be after check-in date';
+                nightsCalculation.className = 'text-danger small';
+            }
+        }
+    }
+    
+    function showRoomInfo(roomType) {
+        // Hide all room info divs
+        document.querySelectorAll('.room-type-info').forEach(div => {
+            div.classList.add('d-none');
+        });
+        
+        // Show selected room info
+        const infoId = roomType.toLowerCase() + 'Info';
+        const infoDiv = document.getElementById(infoId);
+        if (infoDiv) {
+            infoDiv.classList.remove('d-none');
+        }
+    }
+    
+    function updateSummary() {
+        const checkin = checkinInput.value;
+        const checkout = checkoutInput.value;
+        const roomType = roomTypeSelect.value;
+        const rate = roomRates[roomType] || 3000;
+        
+        // Update summary fields
+        document.getElementById('summaryCheckin').textContent = checkin ? new Date(checkin).toLocaleDateString() : '-';
+        document.getElementById('summaryCheckout').textContent = checkout ? new Date(checkout).toLocaleDateString() : '-';
+        document.getElementById('summaryRoomType').textContent = roomType;
+        document.getElementById('summaryRate').textContent = `PKR ${rate.toLocaleString()}`;
+        
+        // Calculate nights and total
+        if (checkin && checkout) {
+            const checkinDate = new Date(checkin);
+            const checkoutDate = new Date(checkout);
+            const nights = Math.ceil((checkoutDate - checkinDate) / (1000 * 3600 * 24));
+            
+            if (nights > 0) {
+                const total = nights * rate;
+                document.getElementById('summaryNights').textContent = nights;
+                document.getElementById('summaryTotal').textContent = `PKR ${total.toLocaleString()}`;
+            } else {
+                document.getElementById('summaryNights').textContent = '-';
+                document.getElementById('summaryTotal').textContent = 'PKR 0';
+            }
+        } else {
+            document.getElementById('summaryNights').textContent = '-';
+            document.getElementById('summaryTotal').textContent = 'PKR 0';
+        }
+    }
+    
+    // Initialize
+    showRoomInfo('Standard');
+    updateSummary();
+    
+    // Form validation
+    const form = document.querySelector('.needs-validation');
+    form.addEventListener('submit', function(event) {
+        if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+    });
+    
+    // Initialize rating display
+    initializeRatings();
+});
+</script>
+{% endblock %}

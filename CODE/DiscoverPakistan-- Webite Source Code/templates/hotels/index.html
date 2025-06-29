@@ -1,0 +1,278 @@
+{% extends "base.html" %}
+
+{% block title %}Hotels - Pakistan Tourism{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<section class="bg-primary-gradient text-white py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                <h1 class="display-4 fw-bold mb-3">Find Your Perfect Stay</h1>
+                <p class="lead">
+                    From luxury resorts to budget-friendly accommodations, 
+                    discover the best hotels across Pakistan for an unforgettable stay.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Search and Filter Section -->
+<section class="section-padding-sm">
+    <div class="container">
+        <div class="search-section">
+            <form method="GET" id="searchForm" class="row g-3">
+                <div class="col-md-5">
+                    <label class="form-label fw-semibold">
+                        <i class="fas fa-search me-1"></i>Search Hotels
+                    </label>
+                    <input type="text" 
+                           class="form-control" 
+                           name="search" 
+                           value="{{ search }}" 
+                           placeholder="Search by hotel name or facilities..."
+                           id="searchInput">
+                </div>
+                
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">
+                        <i class="fas fa-map-marker-alt me-1"></i>City
+                    </label>
+                    <select name="city" class="form-select filter-select">
+                        <option value="">All Cities</option>
+                        {% for city in cities %}
+                        <option value="{{ city }}" {{ 'selected' if city == selected_city }}>
+                            {{ city }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">
+                        <i class="fas fa-calendar me-1"></i>Check-in
+                    </label>
+                    <input type="date" class="form-control" name="checkin" value="{{ request.args.get('checkin', '') }}">
+                </div>
+                
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search me-1"></i>Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+<!-- Results Section -->
+<section class="section-padding">
+    <div class="container">
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <h3 class="fw-bold">
+                    {% if search or selected_city %}
+                        Search Results 
+                        <span class="text-muted-custom">({{ hotels|length }} found)</span>
+                    {% else %}
+                        All Hotels 
+                        <span class="text-muted-custom">({{ hotels|length }} total)</span>
+                    {% endif %}
+                </h3>
+            </div>
+            <div class="col-md-6 text-md-end">
+                {% if search or selected_city %}
+                <a href="{{ url_for('hotels.index') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-times me-1"></i>Clear Filters
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        
+        {% if hotels %}
+        <div class="row">
+            {% for hotel in hotels %}
+            <div class="col-lg-6 col-xl-4 mb-4">
+                <div class="card h-100">
+                    <div class="image-hover-zoom position-relative">
+                        <img src="{{ hotel.imageURL or 'https://via.placeholder.com/400x250?text=No+Image' }}" 
+                             class="card-img-top" 
+                             alt="{{ hotel.name }}"
+                             style="height: 250px; object-fit: cover;">
+                        
+                        <div class="position-absolute top-0 end-0 m-2">
+                            <span class="badge bg-success">Available</span>
+                        </div>
+                    </div>
+                    
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">{{ hotel.name }}</h5>
+                        
+                        <p class="card-text text-muted-custom mb-2">
+                            <i class="fas fa-map-marker-alt me-1"></i>
+                            {{ hotel.street }}, {{ hotel.city }}
+                        </p>
+                        
+                        {% if hotel.facilities %}
+                        <div class="mb-3">
+                            <h6 class="small fw-semibold text-muted-custom mb-1">FACILITIES</h6>
+                            <p class="card-text small">
+                                <i class="fas fa-concierge-bell me-1"></i>
+                                {{ hotel.facilities[:80] }}{% if hotel.facilities|length > 80 %}...{% endif %}
+                            </p>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Placeholder rating -->
+                        <div class="mb-3">
+                            <div class="rating small" data-rating="4.2">
+                                {% for i in range(5) %}
+                                <i class="star far fa-star text-warning"></i>
+                                {% endfor %}
+                            </div>
+                            <span class="text-muted-custom small ms-2">4.2/5 (Reviews)</span>
+                        </div>
+                        
+                        <div class="mt-auto">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <a href="{{ url_for('hotels.detail', hotel_id=hotel.hotelID) }}" 
+                                   class="btn btn-primary">
+                                    <i class="fas fa-eye me-1"></i>View Details
+                                </a>
+                                
+                                {% if current_user.is_authenticated %}
+                                <a href="{{ url_for('hotels.book', hotel_id=hotel.hotelID) }}" 
+                                   class="btn btn-success">
+                                    <i class="fas fa-calendar-check me-1"></i>Book Now
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <!-- Empty State -->
+        <div class="text-center py-5">
+            <i class="fas fa-hotel fa-4x text-muted-custom mb-4"></i>
+            <h3 class="text-muted-custom mb-3">No hotels found</h3>
+            <p class="text-muted-custom mb-4">
+                {% if search or selected_city %}
+                    Try adjusting your search criteria or clearing the filters.
+                {% else %}
+                    There are no hotels available at the moment.
+                {% endif %}
+            </p>
+            {% if search or selected_city %}
+            <a href="{{ url_for('hotels.index') }}" class="btn btn-primary">
+                <i class="fas fa-refresh me-1"></i>View All Hotels
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Popular Cities -->
+{% if not (search or selected_city) and cities %}
+<section class="section-padding bg-light-custom">
+    <div class="container">
+        <div class="row mb-4">
+            <div class="col-lg-8 mx-auto text-center">
+                <h2 class="display-6 fw-bold mb-3">Popular Hotel Destinations</h2>
+                <p class="lead text-muted-custom">
+                    Find accommodations in Pakistan's most visited cities
+                </p>
+            </div>
+        </div>
+        
+        <div class="row justify-content-center">
+            {% for city in cities[:6] %}
+            <div class="col-lg-2 col-md-4 col-6 mb-3">
+                <a href="{{ url_for('hotels.index', city=city) }}" 
+                   class="text-decoration-none">
+                    <div class="card text-center h-100 border-0 shadow-sm">
+                        <div class="card-body">
+                            <i class="fas fa-building fa-2x text-primary-custom mb-2"></i>
+                            <h6 class="card-title mb-1">{{ city }}</h6>
+                            <small class="text-muted-custom">
+                                {{ hotels|selectattr('city', 'equalto', city)|list|length }} hotel{{ 's' if hotels|selectattr('city', 'equalto', city)|list|length != 1 else '' }}
+                            </small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Why Choose Us -->
+<section class="section-padding">
+    <div class="container">
+        <div class="row mb-5">
+            <div class="col-lg-8 mx-auto text-center">
+                <h2 class="display-6 fw-bold mb-3">Why Book With Us?</h2>
+                <p class="lead text-muted-custom">
+                    We offer the best hotel booking experience with verified properties and secure payments
+                </p>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="text-center">
+                    <div class="bg-primary-gradient text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                         style="width: 60px; height: 60px;">
+                        <i class="fas fa-shield-alt fa-2x"></i>
+                    </div>
+                    <h5 class="fw-bold">Verified Properties</h5>
+                    <p class="text-muted-custom">All hotels are verified for quality and safety standards</p>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="text-center">
+                    <div class="bg-primary-gradient text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                         style="width: 60px; height: 60px;">
+                        <i class="fas fa-lock fa-2x"></i>
+                    </div>
+                    <h5 class="fw-bold">Secure Booking</h5>
+                    <p class="text-muted-custom">Your booking and payment information is always secure</p>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="text-center">
+                    <div class="bg-primary-gradient text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                         style="width: 60px; height: 60px;">
+                        <i class="fas fa-headset fa-2x"></i>
+                    </div>
+                    <h5 class="fw-bold">24/7 Support</h5>
+                    <p class="text-muted-custom">Round-the-clock customer support for your peace of mind</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Set minimum date for check-in
+    const checkinInput = document.querySelector('input[name="checkin"]');
+    if (checkinInput) {
+        const today = new Date().toISOString().split('T')[0];
+        checkinInput.min = today;
+    }
+    
+    // Initialize rating displays
+    initializeRatings();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,324 @@
+{% extends "base.html" %}
+
+{% block title %}My Favorites - Pakistan Tourism{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<section class="bg-primary-gradient text-white py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="display-5 fw-bold mb-3">My Favorite Destinations</h1>
+                <p class="lead">Your saved destinations for future travel planning</p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <i class="fas fa-heart fa-4x opacity-75"></i>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Favorites Content -->
+<section class="section-padding">
+    <div class="container">
+        {% if favorites %}
+        <!-- Header Actions -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <h3 class="fw-bold">
+                    Saved Destinations 
+                    <span class="text-muted-custom">({{ favorites|length }} favorite{{ 's' if favorites|length != 1 else '' }})</span>
+                </h3>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-secondary active" id="gridView">
+                        <i class="fas fa-th"></i> Grid
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" id="listView">
+                        <i class="fas fa-list"></i> List
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grid View -->
+        <div id="favoritesGrid" class="row">
+            {% for favorite, destination in favorites %}
+            <div class="col-lg-4 col-md-6 mb-4 favorite-item" data-destination-id="{{ destination.destinationID }}">
+                <div class="card h-100">
+                    <div class="image-hover-zoom position-relative">
+                        <img src="{{ destination.imageURL or 'https://via.placeholder.com/400x250?text=No+Image' }}" 
+                             class="card-img-top" 
+                             alt="{{ destination.name }}"
+                             style="height: 250px; object-fit: cover;">
+                        
+                        <!-- Remove from favorites button -->
+                        <button class="btn btn-danger btn-sm position-absolute top-0 end-0 m-2 remove-favorite-btn" 
+                                data-destination-id="{{ destination.destinationID }}"
+                                title="Remove from favorites">
+                            <i class="fas fa-heart"></i>
+                        </button>
+                        
+                        <!-- Category badge -->
+                        {% if destination.category %}
+                        <span class="badge bg-primary position-absolute bottom-0 start-0 m-2">
+                            {{ destination.category }}
+                        </span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">{{ destination.name }}</h5>
+                        
+                        <p class="card-text text-muted-custom mb-2">
+                            <i class="fas fa-map-marker-alt me-1"></i>
+                            {{ destination.city }}
+                        </p>
+                        
+                        <p class="card-text flex-grow-1">
+                            {{ destination.description[:120] }}{% if destination.description|length > 120 %}...{% endif %}
+                        </p>
+                        
+                        <div class="mb-3">
+                            <small class="text-muted-custom">
+                                <i class="fas fa-heart me-1"></i>
+                                Added on {{ favorite.dateAdded.strftime('%B %d, %Y') }}
+                            </small>
+                        </div>
+                        
+                        <div class="mt-auto">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <a href="{{ url_for('destinations.detail', destination_id=destination.destinationID) }}" 
+                                   class="btn btn-primary">
+                                    <i class="fas fa-eye me-1"></i>View Details
+                                </a>
+                                
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle" 
+                                            type="button" data-bs-toggle="dropdown">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li>
+                                            <a class="dropdown-item" href="{{ url_for('hotels.index', city=destination.city) }}">
+                                                <i class="fas fa-hotel me-2"></i>Find Hotels
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="{{ url_for('restaurants.index', search=destination.name) }}">
+                                                <i class="fas fa-utensils me-2"></i>Nearby Restaurants
+                                            </a>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <button class="dropdown-item text-danger remove-favorite-btn" 
+                                                    data-destination-id="{{ destination.destinationID }}">
+                                                <i class="fas fa-trash me-2"></i>Remove from Favorites
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- List View (Initially Hidden) -->
+        <div id="favoritesList" class="d-none">
+            {% for favorite, destination in favorites %}
+            <div class="card mb-3 favorite-item" data-destination-id="{{ destination.destinationID }}">
+                <div class="row g-0">
+                    <div class="col-md-3">
+                        <img src="{{ destination.imageURL or 'https://via.placeholder.com/300x200?text=No+Image' }}" 
+                             class="img-fluid rounded-start h-100" 
+                             alt="{{ destination.name }}"
+                             style="object-fit: cover;">
+                    </div>
+                    <div class="col-md-9">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h5 class="card-title">{{ destination.name }}</h5>
+                                    <p class="card-text text-muted-custom">
+                                        <i class="fas fa-map-marker-alt me-1"></i>
+                                        {{ destination.street }}, {{ destination.city }}
+                                    </p>
+                                </div>
+                                <button class="btn btn-outline-danger btn-sm remove-favorite-btn" 
+                                        data-destination-id="{{ destination.destinationID }}"
+                                        title="Remove from favorites">
+                                    <i class="fas fa-heart"></i>
+                                </button>
+                            </div>
+                            
+                            {% if destination.category %}
+                            <span class="badge badge-primary mb-2">{{ destination.category }}</span>
+                            {% endif %}
+                            
+                            <p class="card-text">{{ destination.description }}</p>
+                            
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <small class="text-muted-custom">
+                                        <i class="fas fa-heart me-1"></i>
+                                        Added on {{ favorite.dateAdded.strftime('%B %d, %Y') }}
+                                    </small>
+                                </div>
+                                <div class="col-md-6 text-md-end">
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ url_for('destinations.detail', destination_id=destination.destinationID) }}" 
+                                           class="btn btn-primary btn-sm">
+                                            <i class="fas fa-eye me-1"></i>View
+                                        </a>
+                                        <a href="{{ url_for('hotels.index', city=destination.city) }}" 
+                                           class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-hotel me-1"></i>Hotels
+                                        </a>
+                                        <a href="{{ url_for('restaurants.index', search=destination.name) }}" 
+                                           class="btn btn-outline-success btn-sm">
+                                            <i class="fas fa-utensils me-1"></i>Restaurants
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% else %}
+        <!-- Empty State -->
+        <div class="text-center py-5">
+            <i class="fas fa-heart-broken fa-5x text-muted mb-4"></i>
+            <h3 class="text-muted-custom mb-3">No favorites yet</h3>
+            <p class="text-muted-custom mb-4">
+                Start exploring Pakistan's amazing destinations and save your favorites for easy access!
+            </p>
+            <div class="d-flex gap-3 justify-content-center flex-wrap">
+                <a href="{{ url_for('destinations.index') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-map-marker-alt me-2"></i>Explore Destinations
+                </a>
+                <a href="{{ url_for('main.index') }}" class="btn btn-outline-primary btn-lg">
+                    <i class="fas fa-home me-2"></i>Back to Home
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Remove Favorite Confirmation Modal -->
+<div class="modal fade" id="removeFavoriteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Remove from Favorites</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center">
+                    <i class="fas fa-heart-broken fa-3x text-danger mb-3"></i>
+                    <h6>Are you sure you want to remove this destination from your favorites?</h6>
+                    <p class="text-muted-custom">You can always add it back later.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmRemoveBtn">
+                    <i class="fas fa-trash me-2"></i>Remove
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const gridView = document.getElementById('gridView');
+    const listView = document.getElementById('listView');
+    const favoritesGrid = document.getElementById('favoritesGrid');
+    const favoritesList = document.getElementById('favoritesList');
+    
+    // View toggle functionality
+    gridView.addEventListener('click', function() {
+        gridView.classList.add('active');
+        listView.classList.remove('active');
+        favoritesGrid.classList.remove('d-none');
+        favoritesList.classList.add('d-none');
+    });
+    
+    listView.addEventListener('click', function() {
+        listView.classList.add('active');
+        gridView.classList.remove('active');
+        favoritesGrid.classList.add('d-none');
+        favoritesList.classList.remove('d-none');
+    });
+    
+    // Remove favorite functionality
+    let destinationToRemove = null;
+    const modal = new bootstrap.Modal(document.getElementById('removeFavoriteModal'));
+    
+    document.querySelectorAll('.remove-favorite-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            destinationToRemove = this.dataset.destinationId;
+            modal.show();
+        });
+    });
+    
+    document.getElementById('confirmRemoveBtn').addEventListener('click', function() {
+        if (destinationToRemove) {
+            // Make AJAX request to remove favorite
+            fetch(`/destinations/${destinationToRemove}/favorite`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken()
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Remove the favorite item from the page
+                    const favoriteItems = document.querySelectorAll(`[data-destination-id="${destinationToRemove}"]`);
+                    favoriteItems.forEach(item => item.remove());
+                    
+                    modal.hide();
+                    showAlert('Destination removed from favorites', 'info');
+                    
+                    // Check if no favorites left
+                    const remainingFavorites = document.querySelectorAll('.favorite-item');
+                    if (remainingFavorites.length === 0) {
+                        location.reload(); // Reload to show empty state
+                    }
+                } else {
+                    showAlert('Failed to remove favorite. Please try again.', 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('An error occurred. Please try again.', 'danger');
+            })
+            .finally(() => {
+                destinationToRemove = null;
+            });
+        }
+    });
+    
+    // Utility function to get CSRF token
+    function getCsrfToken() {
+        return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    }
+});
+</script>
+{% endblock %}

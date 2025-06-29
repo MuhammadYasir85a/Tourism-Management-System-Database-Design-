@@ -1,0 +1,317 @@
+{% extends "base.html" %}
+
+{% block title %}{{ destination.name }} - Pakistan Tourism{% endblock %}
+
+{% block content %}
+<!-- Hero Section with Destination Image -->
+<section class="position-relative" style="height: 60vh; min-height: 400px;">
+    <img src="{{ destination.imageURL or 'https://via.placeholder.com/1200x600?text=No+Image' }}" 
+         alt="{{ destination.name }}"
+         class="w-100 h-100 object-fit-cover position-absolute top-0 start-0">
+    
+    <div class="position-absolute top-0 start-0 w-100 h-100 bg-dark opacity-50"></div>
+    
+    <div class="position-absolute bottom-0 start-0 w-100 text-white p-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8">
+                    <h1 class="display-4 fw-bold mb-3">{{ destination.name }}</h1>
+                    <p class="lead mb-2">
+                        <i class="fas fa-map-marker-alt me-2"></i>
+                        {{ destination.street }}, {{ destination.city }}
+                    </p>
+                    {% if destination.category %}
+                    <span class="badge bg-primary fs-6 px-3 py-2">{{ destination.category }}</span>
+                    {% endif %}
+                </div>
+                <div class="col-lg-4 text-lg-end">
+                    {% if current_user.is_authenticated %}
+                    <form method="POST" action="{{ url_for('destinations.toggle_favorite', destination_id=destination.destinationID) }}" class="d-inline">
+                        <button type="submit" class="btn btn-{{ 'danger' if is_favorited else 'outline-light' }} btn-lg">
+                            <i class="fas fa-heart me-2"></i>
+                            {{ 'Remove from Favorites' if is_favorited else 'Add to Favorites' }}
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Main Content -->
+<section class="section-padding">
+    <div class="container">
+        <div class="row">
+            <!-- Main Content Column -->
+            <div class="col-lg-8">
+                <!-- Description -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h3 class="card-title fw-bold mb-3">
+                            <i class="fas fa-info-circle text-primary-custom me-2"></i>
+                            About {{ destination.name }}
+                        </h3>
+                        {% if destination.description %}
+                        <p class="card-text">{{ destination.description }}</p>
+                        {% else %}
+                        <p class="text-muted-custom">No description available for this destination.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Restaurants at this Destination -->
+                {% if restaurants %}
+                <div class="card mb-4">
+                    <div class="card-header bg-light-custom">
+                        <h4 class="card-title mb-0">
+                            <i class="fas fa-utensils text-primary-custom me-2"></i>
+                            Restaurants at {{ destination.name }}
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            {% for restaurant in restaurants %}
+                            <div class="col-md-6 mb-3">
+                                <div class="card h-100 border-0 shadow-sm">
+                                    <div class="row g-0">
+                                        <div class="col-4">
+                                            <img src="{{ restaurant.imageURL or 'https://via.placeholder.com/150x100?text=No+Image' }}" 
+                                                 class="img-fluid rounded-start h-100 object-fit-cover" 
+                                                 alt="{{ restaurant.name }}">
+                                        </div>
+                                        <div class="col-8">
+                                            <div class="card-body p-3">
+                                                <h6 class="card-title mb-1">{{ restaurant.name }}</h6>
+                                                {% if restaurant.cuisine %}
+                                                <span class="badge badge-secondary mb-2">{{ restaurant.cuisine }}</span>
+                                                {% endif %}
+                                                <p class="card-text small text-muted-custom mb-2">
+                                                    <i class="fas fa-map-marker-alt me-1"></i>{{ restaurant.city }}
+                                                </p>
+                                                <a href="{{ url_for('restaurants.detail', restaurant_id=restaurant.restaurantID) }}" 
+                                                   class="btn btn-primary btn-sm">
+                                                    View Details
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Reviews Section -->
+                <div class="card">
+                    <div class="card-header bg-light-custom">
+                        <h4 class="card-title mb-0">
+                            <i class="fas fa-star text-warning me-2"></i>
+                            Reviews & Ratings
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        {% if reviews %}
+                        <div class="row mb-4">
+                            {% set avg_rating = reviews|sum(attribute='rating') / reviews|length %}
+                            <div class="col-md-4 text-center">
+                                <div class="display-4 fw-bold text-primary-custom">{{ "%.1f"|format(avg_rating) }}</div>
+                                <div class="rating mb-2" data-rating="{{ avg_rating }}">
+                                    {% for i in range(5) %}
+                                    <i class="star far fa-star"></i>
+                                    {% endfor %}
+                                </div>
+                                <p class="text-muted-custom mb-0">Based on {{ reviews|length }} review{{ 's' if reviews|length != 1 else '' }}</p>
+                            </div>
+                            <div class="col-md-8">
+                                {% if current_user.is_authenticated %}
+                                <a href="#" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#reviewModal">
+                                    <i class="fas fa-plus me-2"></i>Write a Review
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Individual Reviews -->
+                        {% for review in reviews %}
+                        <div class="border-bottom pb-3 mb-3">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <h6 class="mb-1">{{ review.user.name }}</h6>
+                                    <div class="rating small" data-rating="{{ review.rating }}">
+                                        {% for i in range(5) %}
+                                        <i class="star far fa-star text-warning"></i>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <small class="text-muted-custom">{{ review.reviewDate.strftime('%B %d, %Y') }}</small>
+                            </div>
+                            {% if review.comment %}
+                            <p class="mb-0">{{ review.comment }}</p>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                        {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-star fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted-custom">No reviews yet</h5>
+                            <p class="text-muted-custom">Be the first to review this destination!</p>
+                            {% if current_user.is_authenticated %}
+                            <a href="#" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#reviewModal">
+                                <i class="fas fa-plus me-2"></i>Write First Review
+                            </a>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <!-- Quick Info -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary-gradient text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-info me-2"></i>Quick Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-map-marker-alt text-primary-custom me-3"></i>
+                                    <div>
+                                        <strong>Location</strong><br>
+                                        <span class="text-muted-custom">{{ destination.street }}, {{ destination.city }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% if destination.category %}
+                            <div class="col-12">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-tag text-primary-custom me-3"></i>
+                                    <div>
+                                        <strong>Category</strong><br>
+                                        <span class="text-muted-custom">{{ destination.category }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% if destination.admin %}
+                            <div class="col-12">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-user-shield text-primary-custom me-3"></i>
+                                    <div>
+                                        <strong>Managed by</strong><br>
+                                        <span class="text-muted-custom">{{ destination.admin.name }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="card">
+                    <div class="card-header bg-light-custom">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-compass me-2"></i>Plan Your Visit
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="{{ url_for('hotels.index', city=destination.city) }}" class="btn btn-outline-primary">
+                                <i class="fas fa-hotel me-2"></i>Find Hotels in {{ destination.city }}
+                            </a>
+                            {% if restaurants %}
+                            <a href="{{ url_for('restaurants.index', search=destination.name) }}" class="btn btn-outline-primary">
+                                <i class="fas fa-utensils me-2"></i>Nearby Restaurants
+                            </a>
+                            {% endif %}
+                            <a href="{{ url_for('destinations.index', city=destination.city) }}" class="btn btn-outline-primary">
+                                <i class="fas fa-map-marked-alt me-2"></i>More in {{ destination.city }}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Review Modal -->
+{% if current_user.is_authenticated %}
+<div class="modal fade" id="reviewModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Write a Review for {{ destination.name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('destinations.detail', destination_id=destination.destinationID) }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Rating</label>
+                        <div class="rating-input">
+                            {% for i in range(5, 0, -1) %}
+                            <input type="radio" name="rating" value="{{ i }}" id="star{{ i }}" required>
+                            <label for="star{{ i }}" class="star-label">
+                                <i class="fas fa-star"></i>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="comment" class="form-label">Comment (Optional)</label>
+                        <textarea class="form-control" id="comment" name="comment" rows="4" 
+                                  placeholder="Share your experience..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Submit Review</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<style>
+.rating-input {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+}
+
+.rating-input input {
+    display: none;
+}
+
+.rating-input .star-label {
+    color: #ddd;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.rating-input input:checked ~ .star-label,
+.rating-input .star-label:hover,
+.rating-input .star-label:hover ~ .star-label {
+    color: #ffd700;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize rating displays
+    initializeRatings();
+});
+</script>
+{% endblock %}

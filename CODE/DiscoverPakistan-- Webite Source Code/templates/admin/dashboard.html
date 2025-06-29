@@ -1,0 +1,350 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Pakistan Tourism{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<section class="bg-primary-gradient text-white py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="display-5 fw-bold mb-3">Admin Dashboard</h1>
+                <p class="lead">Manage tourism content and monitor system performance</p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <i class="fas fa-tachometer-alt fa-4x opacity-75"></i>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Quick Stats -->
+<section class="section-padding-sm bg-light-custom">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card stat-card h-100 border-0">
+                    <div class="card-body text-center">
+                        <div class="bg-primary-gradient text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                             style="width: 60px; height: 60px;">
+                            <i class="fas fa-map-marker-alt fa-2x"></i>
+                        </div>
+                        <div class="stat-number text-primary-custom">{{ total_destinations }}</div>
+                        <h6 class="text-muted-custom mb-0">Total Destinations</h6>
+                        <small class="text-success">
+                            <i class="fas fa-arrow-up me-1"></i>Active
+                        </small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card stat-card h-100 border-0">
+                    <div class="card-body text-center">
+                        <div class="bg-success rounded-circle d-inline-flex align-items-center justify-content-center mb-3 text-white" 
+                             style="width: 60px; height: 60px;">
+                            <i class="fas fa-hotel fa-2x"></i>
+                        </div>
+                        <div class="stat-number text-success">{{ total_hotels }}</div>
+                        <h6 class="text-muted-custom mb-0">Total Hotels</h6>
+                        <small class="text-success">
+                            <i class="fas fa-arrow-up me-1"></i>Available
+                        </small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card stat-card h-100 border-0">
+                    <div class="card-body text-center">
+                        <div class="bg-warning rounded-circle d-inline-flex align-items-center justify-content-center mb-3 text-white" 
+                             style="width: 60px; height: 60px;">
+                            <i class="fas fa-utensils fa-2x"></i>
+                        </div>
+                        <div class="stat-number text-warning">{{ total_restaurants }}</div>
+                        <h6 class="text-muted-custom mb-0">Total Restaurants</h6>
+                        <small class="text-success">
+                            <i class="fas fa-arrow-up me-1"></i>Operating
+                        </small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card stat-card h-100 border-0">
+                    <div class="card-body text-center">
+                        <div class="bg-info rounded-circle d-inline-flex align-items-center justify-content-center mb-3 text-white" 
+                             style="width: 60px; height: 60px;">
+                            <i class="fas fa-calendar-check fa-2x"></i>
+                        </div>
+                        <div class="stat-number text-info">{{ total_bookings }}</div>
+                        <h6 class="text-muted-custom mb-0">Total Bookings</h6>
+                        <small class="text-success">
+                            <i class="fas fa-arrow-up me-1"></i>This month
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Main Content -->
+<section class="section-padding">
+    <div class="container">
+        <div class="row">
+            <!-- Left Column -->
+            <div class="col-lg-8">
+                <!-- Quick Actions -->
+                <div class="card mb-4">
+                    <div class="card-header bg-light-custom">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-bolt text-primary-custom me-2"></i>
+                            Quick Actions
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <div class="d-grid">
+                                    <a href="{{ url_for('admin.destinations') }}" class="btn btn-primary">
+                                        <i class="fas fa-map-marker-alt me-2"></i>
+                                        Manage Destinations
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="d-grid">
+                                    <a href="{{ url_for('admin.hotels') }}" class="btn btn-success">
+                                        <i class="fas fa-hotel me-2"></i>
+                                        Manage Hotels
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="d-grid">
+                                    <a href="{{ url_for('admin.restaurants') }}" class="btn btn-warning">
+                                        <i class="fas fa-utensils me-2"></i>
+                                        Manage Restaurants
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="card mb-4">
+                    <div class="card-header bg-light-custom">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-chart-line text-primary-custom me-2"></i>
+                            System Overview
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="border rounded p-3">
+                                    <h6 class="fw-bold mb-2">Content Distribution</h6>
+                                    <div class="progress mb-2" style="height: 8px;">
+                                        <div class="progress-bar bg-primary" style="width: {{ (total_destinations / (total_destinations + total_hotels + total_restaurants) * 100) if (total_destinations + total_hotels + total_restaurants) > 0 else 0 }}%"></div>
+                                    </div>
+                                    <small class="text-muted-custom">Destinations: {{ total_destinations }}</small>
+                                    
+                                    <div class="progress mb-2 mt-2" style="height: 8px;">
+                                        <div class="progress-bar bg-success" style="width: {{ (total_hotels / (total_destinations + total_hotels + total_restaurants) * 100) if (total_destinations + total_hotels + total_restaurants) > 0 else 0 }}%"></div>
+                                    </div>
+                                    <small class="text-muted-custom">Hotels: {{ total_hotels }}</small>
+                                    
+                                    <div class="progress mb-2 mt-2" style="height: 8px;">
+                                        <div class="progress-bar bg-warning" style="width: {{ (total_restaurants / (total_destinations + total_hotels + total_restaurants) * 100) if (total_destinations + total_hotels + total_restaurants) > 0 else 0 }}%"></div>
+                                    </div>
+                                    <small class="text-muted-custom">Restaurants: {{ total_restaurants }}</small>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <div class="border rounded p-3">
+                                    <h6 class="fw-bold mb-2">System Health</h6>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="small">Database</span>
+                                        <span class="badge bg-success">Online</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="small">Images</span>
+                                        <span class="badge bg-success">Loading</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="small">Search</span>
+                                        <span class="badge bg-success">Active</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="small">Bookings</span>
+                                        <span class="badge bg-success">Functional</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Content -->
+                <div class="card">
+                    <div class="card-header bg-light-custom">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-clock text-primary-custom me-2"></i>
+                            Recent Activity
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="timeline">
+                            <div class="d-flex align-items-start mb-3">
+                                <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white me-3" 
+                                     style="width: 40px; height: 40px; flex-shrink: 0;">
+                                    <i class="fas fa-plus"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">System initialized</h6>
+                                    <p class="text-muted-custom small mb-0">Tourism management system is ready for content management</p>
+                                    <small class="text-muted-custom">Today</small>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex align-items-start mb-3">
+                                <div class="bg-success rounded-circle d-flex align-items-center justify-content-center text-white me-3" 
+                                     style="width: 40px; height: 40px; flex-shrink: 0;">
+                                    <i class="fas fa-database"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">Database connected</h6>
+                                    <p class="text-muted-custom small mb-0">Successfully connected to MySQL database</p>
+                                    <small class="text-muted-custom">Today</small>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex align-items-start">
+                                <div class="bg-info rounded-circle d-flex align-items-center justify-content-center text-white me-3" 
+                                     style="width: 40px; height: 40px; flex-shrink: 0;">
+                                    <i class="fas fa-cog"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">Admin access granted</h6>
+                                    <p class="text-muted-custom small mb-0">Admin panel is now accessible for content management</p>
+                                    <small class="text-muted-custom">Today</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="col-lg-4">
+                <!-- Admin Profile -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary-gradient text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-user-shield me-2"></i>Admin Profile
+                        </h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                             style="width: 80px; height: 80px;">
+                            <i class="fas fa-user-shield fa-2x text-primary-custom"></i>
+                        </div>
+                        <h6 class="mb-1">{{ current_user.name }}</h6>
+                        <p class="text-muted-custom small mb-3">{{ current_user.email }}</p>
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <div class="border-end">
+                                    <div class="fw-bold text-primary-custom">Admin</div>
+                                    <small class="text-muted-custom">Role</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="fw-bold text-success">Active</div>
+                                <small class="text-muted-custom">Status</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- System Status -->
+                <div class="card mb-4">
+                    <div class="card-header bg-light-custom">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-server me-2"></i>System Status
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span>Server Status</span>
+                            <span class="badge bg-success">
+                                <i class="fas fa-circle me-1"></i>Online
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span>Database</span>
+                            <span class="badge bg-success">
+                                <i class="fas fa-circle me-1"></i>Connected
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span>Storage</span>
+                            <span class="badge bg-success">
+                                <i class="fas fa-circle me-1"></i>Available
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Last Backup</span>
+                            <span class="badge bg-warning">
+                                <i class="fas fa-clock me-1"></i>Pending
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="card">
+                    <div class="card-header bg-light-custom">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-external-link-alt me-2"></i>Quick Links
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="{{ url_for('main.index') }}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-home me-2"></i>View Public Site
+                            </a>
+                            <a href="{{ url_for('user.dashboard') }}" class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-user me-2"></i>User Dashboard
+                            </a>
+                            <a href="#" class="btn btn-outline-info btn-sm">
+                                <i class="fas fa-chart-bar me-2"></i>Analytics
+                            </a>
+                            <a href="#" class="btn btn-outline-warning btn-sm">
+                                <i class="fas fa-cog me-2"></i>Settings
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add any admin dashboard specific JavaScript here
+    console.log('Admin dashboard loaded');
+    
+    // Auto-refresh system status every 30 seconds
+    setInterval(function() {
+        // You could add AJAX calls here to refresh system status
+        console.log('System status check...');
+    }, 30000);
+});
+</script>
+{% endblock %}

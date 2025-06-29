@@ -1,0 +1,583 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Hotels - Admin Panel{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<section class="bg-primary-gradient text-white py-4">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}" class="text-white">Admin</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Hotels</li>
+            </ol>
+        </nav>
+        
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="h2 mb-0">Manage Hotels</h1>
+                <p class="mb-0">Add, edit, and manage hotel accommodations</p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <button class="btn btn-light" data-bs-toggle="modal" data-bs-target="#addHotelModal">
+                    <i class="fas fa-plus me-2"></i>Add New Hotel
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Main Content -->
+<section class="section-padding">
+    <div class="container">
+        <!-- Filter and Search -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Search Hotels</label>
+                        <input type="text" class="form-control" id="searchHotels" placeholder="Search by name or city...">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Filter by City</label>
+                        <select class="form-select" id="filterCity">
+                            <option value="">All Cities</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Filter by Status</label>
+                        <select class="form-select" id="filterStatus">
+                            <option value="">All Statuses</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button class="btn btn-outline-secondary w-100" id="clearFilters">
+                            <i class="fas fa-times me-1"></i>Clear
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hotels Table -->
+        <div class="card">
+            <div class="card-header bg-light-custom d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-hotel text-success me-2"></i>
+                    All Hotels
+                </h5>
+                <span class="badge bg-success">{{ hotels|length }} hotels</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0" id="hotelsTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 60px;">Image</th>
+                                <th>Hotel Name</th>
+                                <th>Location</th>
+                                <th>Facilities</th>
+                                <th>Status</th>
+                                <th>Bookings</th>
+                                <th style="width: 150px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for hotel in hotels %}
+                            <tr class="hotel-row" data-name="{{ hotel.name.lower() }}" 
+                                data-city="{{ hotel.city.lower() }}" data-status="active">
+                                <td>
+                                    <img src="{{ hotel.imageURL or 'https://via.placeholder.com/60x40?text=Hotel' }}" 
+                                         alt="{{ hotel.name }}" 
+                                         class="rounded"
+                                         style="width: 60px; height: 40px; object-fit: cover;">
+                                </td>
+                                <td>
+                                    <h6 class="mb-1">{{ hotel.name }}</h6>
+                                    <small class="text-muted-custom">ID: {{ hotel.hotelID }}</small>
+                                </td>
+                                <td>
+                                    <div>{{ hotel.street }}</div>
+                                    <small class="text-muted-custom">{{ hotel.city }}</small>
+                                </td>
+                                <td>
+                                    <div class="small">
+                                        {{ hotel.facilities[:50] if hotel.facilities else 'No facilities listed' }}
+                                        {% if hotel.facilities and hotel.facilities|length > 50 %}...{% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-success">Active</span>
+                                </td>
+                                <td>
+                                    <div class="text-center">
+                                        <div class="fw-bold">{{ hotel.bookings|length if hotel.bookings else 0 }}</div>
+                                        <small class="text-muted-custom">total</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{{ url_for('hotels.detail', hotel_id=hotel.hotelID) }}" 
+                                           class="btn btn-outline-primary" target="_blank" title="View">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <button class="btn btn-outline-warning edit-hotel-btn" 
+                                                data-hotel-id="{{ hotel.hotelID }}" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-outline-info bookings-btn" 
+                                                data-hotel-id="{{ hotel.hotelID }}" title="View Bookings">
+                                            <i class="fas fa-calendar-check"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger delete-hotel-btn" 
+                                                data-hotel-id="{{ hotel.hotelID }}" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                {% if not hotels %}
+                <div class="text-center py-5">
+                    <i class="fas fa-hotel fa-4x text-muted mb-3"></i>
+                    <h5 class="text-muted-custom">No hotels found</h5>
+                    <p class="text-muted-custom">Start by adding your first hotel</p>
+                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addHotelModal">
+                        <i class="fas fa-plus me-2"></i>Add First Hotel
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Add Hotel Modal -->
+<div class="modal fade" id="addHotelModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Hotel</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="addHotelForm" class="needs-validation" novalidate>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Hotel Name *</label>
+                                <input type="text" class="form-control" name="name" required>
+                                <div class="invalid-feedback">Please enter a hotel name</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">City *</label>
+                                <input type="text" class="form-control" name="city" required>
+                                <div class="invalid-feedback">Please enter a city</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Street Address *</label>
+                        <input type="text" class="form-control" name="street" required>
+                        <div class="invalid-feedback">Please enter a street address</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Facilities</label>
+                        <textarea class="form-control" name="facilities" rows="3" 
+                                  placeholder="List hotel facilities (e.g., Pool, Spa, Restaurants, Gym, WiFi...)"></textarea>
+                        <div class="form-text">Separate facilities with commas</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Image URL</label>
+                        <input type="url" class="form-control" name="imageURL" 
+                               placeholder="https://example.com/hotel-image.jpg">
+                        <div class="form-text">Enter a valid URL for the hotel image</div>
+                    </div>
+                    
+                    <!-- Room Types Section -->
+                    <div class="mb-3">
+                        <label class="form-label">Available Room Types</label>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="Standard" id="roomStandard" name="roomTypes">
+                                    <label class="form-check-label" for="roomStandard">Standard Room</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="Deluxe" id="roomDeluxe" name="roomTypes">
+                                    <label class="form-check-label" for="roomDeluxe">Deluxe Room</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="Executive" id="roomExecutive" name="roomTypes">
+                                    <label class="form-check-label" for="roomExecutive">Executive Room</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="Suite" id="roomSuite" name="roomTypes">
+                                    <label class="form-check-label" for="roomSuite">Suite</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-plus me-2"></i>Add Hotel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Hotel Modal -->
+<div class="modal fade" id="editHotelModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Hotel</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editHotelForm" class="needs-validation" novalidate>
+                <input type="hidden" name="hotelID" id="editHotelID">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Hotel Name *</label>
+                                <input type="text" class="form-control" name="name" id="editName" required>
+                                <div class="invalid-feedback">Please enter a hotel name</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">City *</label>
+                                <input type="text" class="form-control" name="city" id="editCity" required>
+                                <div class="invalid-feedback">Please enter a city</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Street Address *</label>
+                        <input type="text" class="form-control" name="street" id="editStreet" required>
+                        <div class="invalid-feedback">Please enter a street address</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Facilities</label>
+                        <textarea class="form-control" name="facilities" id="editFacilities" rows="3"></textarea>
+                        <div class="form-text">Separate facilities with commas</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Image URL</label>
+                        <input type="url" class="form-control" name="imageURL" id="editImageURL">
+                        <div class="form-text">Enter a valid URL for the hotel image</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-save me-2"></i>Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- View Bookings Modal -->
+<div class="modal fade" id="viewBookingsModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Hotel Bookings</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="bookingsContent">
+                    <!-- Bookings will be loaded here -->
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading bookings...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="exportBookings()">
+                    <i class="fas fa-download me-2"></i>Export Data
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteHotelModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Hotel</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Warning:</strong> This action cannot be undone.
+                </div>
+                <p>Are you sure you want to delete this hotel? This will also remove:</p>
+                <ul>
+                    <li>All associated bookings</li>
+                    <li>All reviews and ratings</li>
+                    <li>All room availability data</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="fas fa-trash me-2"></i>Delete Hotel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Function to show alerts
+function showAlert(message, type) {
+    const alertPlaceholder = document.createElement('div');
+    alertPlaceholder.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-4 shadow-sm`;
+    alertPlaceholder.style.zIndex = '9999';
+    alertPlaceholder.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    document.body.appendChild(alertPlaceholder);
+    
+    // Auto dismiss after 5 seconds
+    setTimeout(() => {
+        const alert = bootstrap.Alert.getOrCreateInstance(alertPlaceholder);
+        alert.close();
+    }, 5000);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Filter and search functionality
+    const searchInput = document.getElementById('searchHotels');
+    const cityFilter = document.getElementById('filterCity');
+    const statusFilter = document.getElementById('filterStatus');
+    const clearFiltersBtn = document.getElementById('clearFilters');
+    const hotelRows = document.querySelectorAll('.hotel-row');
+    
+    // Populate city filter
+    const cities = [...new Set(Array.from(hotelRows).map(row => 
+        row.querySelector('small').textContent))];
+    cities.forEach(city => {
+        const option = document.createElement('option');
+        option.value = city;
+        option.textContent = city;
+        cityFilter.appendChild(option);
+    });
+    
+    // Filter function
+    function filterHotels() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const selectedCity = cityFilter.value;
+        const selectedStatus = statusFilter.value;
+        
+        hotelRows.forEach(row => {
+            const name = row.dataset.name;
+            const city = row.dataset.city;
+            const status = row.dataset.status;
+            
+            const matchesSearch = name.includes(searchTerm) || city.includes(searchTerm);
+            const matchesCity = !selectedCity || city === selectedCity.toLowerCase();
+            const matchesStatus = !selectedStatus || status === selectedStatus;
+            
+            row.style.display = matchesSearch && matchesCity && matchesStatus ? '' : 'none';
+        });
+    }
+    
+    // Event listeners for filters
+    searchInput.addEventListener('input', filterHotels);
+    cityFilter.addEventListener('change', filterHotels);
+    statusFilter.addEventListener('change', filterHotels);
+    
+    clearFiltersBtn.addEventListener('click', function() {
+        searchInput.value = '';
+        cityFilter.value = '';
+        statusFilter.value = '';
+        filterHotels();
+    });
+    
+    // Add hotel form
+    const addForm = document.getElementById('addHotelForm');
+    addForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if (this.checkValidity()) {
+            const formData = new FormData(this);
+            
+            // Here you would normally submit to the server
+            console.log('Adding hotel:', Object.fromEntries(formData));
+            
+            bootstrap.Modal.getInstance(document.getElementById('addHotelModal')).hide();
+            showAlert('Hotel added successfully!', 'success');
+            
+            // Reset form
+            this.reset();
+            this.classList.remove('was-validated');
+        }
+        
+        this.classList.add('was-validated');
+    });
+    
+    // Edit hotel
+    let currentHotelId = null;
+    document.querySelectorAll('.edit-hotel-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            currentHotelId = this.dataset.hotelId;
+            
+            // Here you would normally fetch hotel data from server
+            // For now, we'll use placeholder data
+            document.getElementById('editHotelID').value = currentHotelId;
+            document.getElementById('editName').value = 'Sample Hotel';
+            document.getElementById('editCity').value = 'Sample City';
+            document.getElementById('editStreet').value = 'Sample Street';
+            document.getElementById('editFacilities').value = 'Pool, Spa, Restaurant';
+            document.getElementById('editImageURL').value = '';
+            
+            new bootstrap.Modal(document.getElementById('editHotelModal')).show();
+        });
+    });
+    
+    // Edit form submission
+    const editForm = document.getElementById('editHotelForm');
+    editForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if (this.checkValidity()) {
+            const formData = new FormData(this);
+            
+            // Here you would normally submit to the server
+            console.log('Updating hotel:', Object.fromEntries(formData));
+            
+            bootstrap.Modal.getInstance(document.getElementById('editHotelModal')).hide();
+            showAlert('Hotel updated successfully!', 'success');
+        }
+        
+        this.classList.add('was-validated');
+    });
+    
+    // View bookings
+    document.querySelectorAll('.bookings-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const hotelId = this.dataset.hotelId;
+            const modal = new bootstrap.Modal(document.getElementById('viewBookingsModal'));
+            
+            // Load bookings (this would be an AJAX call in real implementation)
+            setTimeout(() => {
+                document.getElementById('bookingsContent').innerHTML = `
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Booking ID</th>
+                                    <th>Guest Name</th>
+                                    <th>Check-in</th>
+                                    <th>Check-out</th>
+                                    <th>Room Type</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>B001</td>
+                                    <td>Sample Guest</td>
+                                    <td>2024-12-01</td>
+                                    <td>2024-12-05</td>
+                                    <td>Deluxe</td>
+                                    <td><span class="badge bg-success">Confirmed</span></td>
+                                </tr>
+                                <tr class="text-center">
+                                    <td colspan="6" class="text-muted">No bookings found for this hotel</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }, 1000);
+            
+            modal.show();
+        });
+    });
+    
+    // Delete hotel
+    let hotelToDelete = null;
+    document.querySelectorAll('.delete-hotel-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            hotelToDelete = this.dataset.hotelId;
+            new bootstrap.Modal(document.getElementById('deleteHotelModal')).show();
+        });
+    });
+    
+    document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+        if (hotelToDelete) {
+            // Send delete request to server
+            fetch(`/admin/hotels/${hotelToDelete}/delete`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    bootstrap.Modal.getInstance(document.getElementById('deleteHotelModal')).hide();
+                    showAlert(data.message, 'success');
+                    
+                    // Remove row from table
+                    const row = document.querySelector(`.delete-hotel-btn[data-hotel-id="${hotelToDelete}"]`).closest('tr');
+                    row.remove();
+                } else {
+                    showAlert('Error: ' + data.message, 'danger');
+                }
+                hotelToDelete = null;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('An error occurred while deleting the hotel', 'danger');
+                hotelToDelete = null;
+            });
+        }
+    });
+    
+    // Export bookings function
+    window.exportBookings = function() {
+        // This would export booking data in real implementation
+        console.log('Exporting bookings data...');
+        showAlert('Bookings data exported successfully!', 'success');
+    };
+});
+</script>
+{% endblock %}

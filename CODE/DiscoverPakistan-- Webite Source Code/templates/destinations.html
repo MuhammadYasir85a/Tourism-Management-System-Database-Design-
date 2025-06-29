@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Destinations - Pakistan Tourism{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="mb-8">
+    <h1 class="text-4xl font-bold text-gray-800 mb-4">Explore Destinations</h1>
+    <p class="text-gray-600 text-lg">Discover Pakistan's most beautiful and historic destinations</p>
+</div>
+
+<!-- Search and Filters -->
+<div class="bg-white rounded-lg shadow-md p-6 mb-8">
+    <form method="GET" class="space-y-4 md:space-y-0 md:flex md:items-end md:space-x-4">
+        <div class="flex-1">
+            <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Search Destinations</label>
+            <input type="text" id="search" name="search" value="{{ search }}" 
+                   placeholder="Search by name or description..."
+                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pakistan-green focus:border-transparent">
+        </div>
+        
+        <div class="md:w-48">
+            <label for="category" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+            <select id="category" name="category" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pakistan-green focus:border-transparent">
+                <option value="">All Categories</option>
+                {% for category in categories %}
+                    <option value="{{ category }}" {% if category == selected_category %}selected{% endif %}>
+                        {{ category }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="md:w-48">
+            <label for="city" class="block text-sm font-medium text-gray-700 mb-1">City</label>
+            <select id="city" name="city" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pakistan-green focus:border-transparent">
+                <option value="">All Cities</option>
+                {% for city in cities %}
+                    <option value="{{ city }}" {% if city == selected_city %}selected{% endif %}>
+                        {{ city }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="flex space-x-2">
+            <button type="submit" class="bg-pakistan-green text-white px-6 py-2 rounded-md hover:bg-pakistan-light transition-colors">
+                <i class="fas fa-search mr-2"></i>Search
+            </button>
+            <a href="{{ url_for('destinations') }}" class="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors">
+                <i class="fas fa-times mr-2"></i>Clear
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Results -->
+<div class="mb-4">
+    <p class="text-gray-600">
+        <i class="fas fa-map-marker-alt mr-1"></i>
+        {{ destinations|length }} destination(s) found
+        {% if search or selected_category or selected_city %}
+            {% if search %} for "{{ search }}"{% endif %}
+            {% if selected_category %} in {{ selected_category }}{% endif %}
+            {% if selected_city %} in {{ selected_city }}{% endif %}
+        {% endif %}
+    </p>
+</div>
+
+<!-- Destinations Grid -->
+{% if destinations %}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for destination in destinations %}
+    <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+        <div class="relative h-48 bg-gray-200">
+            {% if destination.imageURL %}
+                <img src="{{ destination.imageURL }}" alt="{{ destination.name }}" class="w-full h-full object-cover">
+            {% else %}
+                <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-pakistan-green to-pakistan-light">
+                    <i class="fas fa-mountain text-white text-4xl"></i>
+                </div>
+            {% endif %}
+            <div class="absolute top-4 right-4">
+                <span class="bg-heritage-gold text-pakistan-green px-2 py-1 rounded-full text-xs font-semibold">
+                    {{ destination.category or 'Destination' }}
+                </span>
+            </div>
+            {% if current_user.is_authenticated %}
+            <div class="absolute top-4 left-4">
+                <form method="POST" action="{{ url_for('toggle_favorite', destination_id=destination.destinationID) }}" class="inline">
+                    <button type="submit" class="bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full p-2 transition-all">
+                        <i class="fas fa-heart text-red-500"></i>
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+        <div class="p-6">
+            <h3 class="text-xl font-semibold text-gray-800 mb-2">{{ destination.name }}</h3>
+            <p class="text-gray-600 mb-2">
+                <i class="fas fa-map-marker-alt mr-1"></i>
+                {{ destination.street }}, {{ destination.city }}
+            </p>
+            <p class="text-gray-700 mb-4 text-sm line-clamp-3">
+                {{ destination.description or 'Discover this amazing destination in Pakistan.' }}
+            </p>
+            <div class="flex justify-between items-center">
+                <a href="{{ url_for('destination_detail', destination_id=destination.destinationID) }}" class="bg-pakistan-green text-white px-4 py-2 rounded hover:bg-pakistan-light transition-colors">
+                    <i class="fas fa-eye mr-1"></i>Explore
+                </a>
+                {% if current_user.is_authenticated %}
+                <form method="POST" action="{{ url_for('mark_visited', destination_id=destination.destinationID) }}" class="inline">
+                    <button type="submit" class="text-pakistan-green hover:text-pakistan-light transition-colors">
+                        <i class="fas fa-check-circle mr-1"></i>Mark Visited
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-12">
+    <i class="fas fa-search text-gray-400 text-6xl mb-4"></i>
+    <h3 class="text-xl font-semibold text-gray-600 mb-2">No Destinations Found</h3>
+    <p class="text-gray-500 mb-4">Try adjusting your search criteria or browse all destinations.</p>
+    <a href="{{ url_for('destinations') }}" class="bg-pakistan-green text-white px-6 py-3 rounded-lg hover:bg-pakistan-light transition-colors">
+        <i class="fas fa-compass mr-2"></i>View All Destinations
+    </a>
+</div>
+{% endif %}
+
+<!-- Pagination placeholder -->
+<div class="mt-8 text-center">
+    <!-- Pagination can be added here if needed -->
+</div>
+{% endblock %}

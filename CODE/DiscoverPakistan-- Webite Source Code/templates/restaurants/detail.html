@@ -1,0 +1,427 @@
+{% extends "base.html" %}
+
+{% block title %}{{ restaurant.name }} - Pakistan Tourism{% endblock %}
+
+{% block content %}
+<!-- Hero Section with Restaurant Image -->
+<section class="position-relative" style="height: 60vh; min-height: 400px;">
+    <img src="{{ restaurant.imageURL or 'https://via.placeholder.com/1200x600?text=No+Image' }}" 
+         alt="{{ restaurant.name }}"
+         class="w-100 h-100 object-fit-cover position-absolute top-0 start-0">
+    
+    <div class="position-absolute top-0 start-0 w-100 h-100 bg-dark opacity-50"></div>
+    
+    <div class="position-absolute bottom-0 start-0 w-100 text-white p-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8">
+                    <h1 class="display-4 fw-bold mb-3">{{ restaurant.name }}</h1>
+                    <p class="lead mb-2">
+                        <i class="fas fa-map-marker-alt me-2"></i>
+                        {{ restaurant.street }}, {{ restaurant.city }}
+                    </p>
+                    <div class="d-flex align-items-center mb-2">
+                        {% if restaurant.cuisine %}
+                        <span class="badge bg-warning text-dark fs-6 px-3 py-2 me-3">{{ restaurant.cuisine }}</span>
+                        {% endif %}
+                        <div class="rating" data-rating="4.1">
+                            {% for i in range(5) %}
+                            <i class="star far fa-star text-warning"></i>
+                            {% endfor %}
+                            <span class="ms-2">4.1/5 (87 reviews)</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 text-lg-end">
+                    {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('restaurants.reserve', restaurant_id=restaurant.restaurantID) }}" 
+                       class="btn btn-success btn-lg">
+                        <i class="fas fa-calendar-plus me-2"></i>Make Reservation
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Main Content -->
+<section class="section-padding">
+    <div class="container">
+        <div class="row">
+            <!-- Main Content Column -->
+            <div class="col-lg-8">
+                <!-- Restaurant Overview -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h3 class="card-title fw-bold mb-3">
+                            <i class="fas fa-utensils text-primary-custom me-2"></i>
+                            About {{ restaurant.name }}
+                        </h3>
+                        <p class="card-text">
+                            Welcome to {{ restaurant.name }}, where authentic {{ restaurant.cuisine or 'Pakistani' }} cuisine 
+                            meets warm hospitality. Located in {{ restaurant.city }}, our restaurant offers a unique dining 
+                            experience that celebrates the rich culinary traditions of Pakistan.
+                        </p>
+                        
+                        {% if restaurant.destination %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            This restaurant is conveniently located near 
+                            <a href="{{ url_for('destinations.detail', destination_id=restaurant.destination.destinationID) }}" 
+                               class="alert-link">{{ restaurant.destination.name }}</a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Menu Highlights -->
+                <div class="card mb-4">
+                    <div class="card-header bg-light-custom">
+                        <h4 class="card-title mb-0">
+                            <i class="fas fa-star text-warning me-2"></i>
+                            Menu Highlights
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            {% set menu_items = [
+                                {'name': 'Chicken Karahi', 'price': 'PKR 1,200', 'description': 'Traditional spicy chicken curry'},
+                                {'name': 'Mutton Biryani', 'price': 'PKR 1,500', 'description': 'Aromatic basmati rice with tender mutton'},
+                                {'name': 'Seekh Kebab', 'price': 'PKR 800', 'description': 'Grilled minced meat skewers'},
+                                {'name': 'Daal Makhani', 'price': 'PKR 600', 'description': 'Creamy black lentils'},
+                                {'name': 'Naan Bread', 'price': 'PKR 150', 'description': 'Fresh baked bread from tandoor'},
+                                {'name': 'Lassi', 'price': 'PKR 200', 'description': 'Traditional yogurt drink'}
+                            ] %}
+                            
+                            {% for item in menu_items %}
+                            <div class="col-md-6 mb-3">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1">{{ item.name }}</h6>
+                                        <p class="text-muted-custom small mb-0">{{ item.description }}</p>
+                                    </div>
+                                    <span class="fw-bold text-primary-custom">{{ item.price }}</span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="text-center mt-3">
+                            <a href="#" class="btn btn-outline-primary">
+                                <i class="fas fa-file-pdf me-2"></i>Download Full Menu
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reviews Section -->
+                <div class="card">
+                    <div class="card-header bg-light-custom">
+                        <h4 class="card-title mb-0">
+                            <i class="fas fa-star text-warning me-2"></i>
+                            Customer Reviews
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        {% if reviews %}
+                        <div class="row mb-4">
+                            {% set avg_rating = reviews|sum(attribute='rating') / reviews|length %}
+                            <div class="col-md-4 text-center">
+                                <div class="display-4 fw-bold text-primary-custom">{{ "%.1f"|format(avg_rating) }}</div>
+                                <div class="rating mb-2" data-rating="{{ avg_rating }}">
+                                    {% for i in range(5) %}
+                                    <i class="star far fa-star"></i>
+                                    {% endfor %}
+                                </div>
+                                <p class="text-muted-custom mb-0">Based on {{ reviews|length }} review{{ 's' if reviews|length != 1 else '' }}</p>
+                            </div>
+                            <div class="col-md-8">
+                                {% if current_user.is_authenticated %}
+                                <a href="#" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#reviewModal">
+                                    <i class="fas fa-plus me-2"></i>Write a Review
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Individual Reviews -->
+                        {% for review in reviews %}
+                        <div class="border-bottom pb-3 mb-3">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <h6 class="mb-1">{{ review.user.name }}</h6>
+                                    <div class="rating small" data-rating="{{ review.rating }}">
+                                        {% for i in range(5) %}
+                                        <i class="star far fa-star text-warning"></i>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <small class="text-muted-custom">{{ review.reviewDate.strftime('%B %d, %Y') if review.reviewDate else 'Recent' }}</small>
+                            </div>
+                            {% if review.comment %}
+                            <p class="mb-0">{{ review.comment }}</p>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                        {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-star fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted-custom">No reviews yet</h5>
+                            <p class="text-muted-custom">Be the first to review this restaurant!</p>
+                            {% if current_user.is_authenticated %}
+                            <a href="#" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#reviewModal">
+                                <i class="fas fa-plus me-2"></i>Write First Review
+                            </a>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <!-- Quick Reservation -->
+                <div class="card mb-4 border-success">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-calendar-plus me-2"></i>Quick Reservation
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if current_user.is_authenticated %}
+                        <form action="{{ url_for('restaurants.reserve', restaurant_id=restaurant.restaurantID) }}" method="GET">
+                            <div class="mb-3">
+                                <label class="form-label">Reservation Date</label>
+                                <input type="date" class="form-control" name="date" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Time</label>
+                                <select class="form-select" name="time" required>
+                                    <option value="">Select Time</option>
+                                    <option value="12:00">12:00 PM</option>
+                                    <option value="12:30">12:30 PM</option>
+                                    <option value="13:00">1:00 PM</option>
+                                    <option value="13:30">1:30 PM</option>
+                                    <option value="19:00">7:00 PM</option>
+                                    <option value="19:30">7:30 PM</option>
+                                    <option value="20:00">8:00 PM</option>
+                                    <option value="20:30">8:30 PM</option>
+                                    <option value="21:00">9:00 PM</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Number of Guests</label>
+                                <select class="form-select" name="guests">
+                                    <option value="1">1 Guest</option>
+                                    <option value="2" selected>2 Guests</option>
+                                    <option value="3">3 Guests</option>
+                                    <option value="4">4 Guests</option>
+                                    <option value="5">5 Guests</option>
+                                    <option value="6">6 Guests</option>
+                                    <option value="7">7 Guests</option>
+                                    <option value="8">8 Guests</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="fas fa-calendar-check me-2"></i>Check Availability
+                            </button>
+                        </form>
+                        {% else %}
+                        <div class="text-center">
+                            <p class="text-muted-custom mb-3">Please sign in to make a reservation</p>
+                            <a href="{{ url_for('auth.login') }}" class="btn btn-primary w-100">
+                                <i class="fas fa-sign-in-alt me-2"></i>Sign In to Reserve
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Restaurant Info -->
+                <div class="card mb-4">
+                    <div class="card-header bg-light-custom">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-info me-2"></i>Restaurant Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-map-marker-alt text-primary-custom me-3"></i>
+                                    <div>
+                                        <strong>Address</strong><br>
+                                        <span class="text-muted-custom">{{ restaurant.street }}, {{ restaurant.city }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-phone text-primary-custom me-3"></i>
+                                    <div>
+                                        <strong>Phone</strong><br>
+                                        <span class="text-muted-custom">+92 XXX XXXXXXX</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-clock text-primary-custom me-3"></i>
+                                    <div>
+                                        <strong>Opening Hours</strong><br>
+                                        <span class="text-muted-custom">12:00 PM - 11:00 PM</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% if restaurant.cuisine %}
+                            <div class="col-12">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-utensils text-primary-custom me-3"></i>
+                                    <div>
+                                        <strong>Cuisine Type</strong><br>
+                                        <span class="text-muted-custom">{{ restaurant.cuisine }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% if restaurant.admin %}
+                            <div class="col-12">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-user-shield text-primary-custom me-3"></i>
+                                    <div>
+                                        <strong>Managed by</strong><br>
+                                        <span class="text-muted-custom">{{ restaurant.admin.name }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Price Range -->
+                <div class="card mb-4">
+                    <div class="card-header bg-light-custom">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-tag me-2"></i>Price Range
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Appetizers</span>
+                            <span class="fw-bold">PKR 300 - 800</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Main Course</span>
+                            <span class="fw-bold">PKR 800 - 1,800</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Beverages</span>
+                            <span class="fw-bold">PKR 150 - 400</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Desserts</span>
+                            <span class="fw-bold">PKR 250 - 600</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Related Restaurants -->
+                <div class="card">
+                    <div class="card-header bg-light-custom">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-utensils me-2"></i>More in {{ restaurant.city }}
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <a href="{{ url_for('restaurants.index', search=restaurant.city) }}" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-search me-2"></i>Browse All Restaurants
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Review Modal -->
+{% if current_user.is_authenticated %}
+<div class="modal fade" id="reviewModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Write a Review for {{ restaurant.name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('restaurants.detail', restaurant_id=restaurant.restaurantID) }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Rating</label>
+                        <div class="rating-input">
+                            {% for i in range(5, 0, -1) %}
+                            <input type="radio" name="rating" value="{{ i }}" id="star{{ i }}" required>
+                            <label for="star{{ i }}" class="star-label">
+                                <i class="fas fa-star"></i>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="comment" class="form-label">Comment (Optional)</label>
+                        <textarea class="form-control" id="comment" name="comment" rows="4" 
+                                  placeholder="Share your dining experience..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Submit Review</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<style>
+.rating-input {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+}
+
+.rating-input input {
+    display: none;
+}
+
+.rating-input .star-label {
+    color: #ddd;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.rating-input input:checked ~ .star-label,
+.rating-input .star-label:hover,
+.rating-input .star-label:hover ~ .star-label {
+    color: #ffd700;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Set minimum date for reservation
+    const dateInput = document.querySelector('input[name="date"]');
+    if (dateInput) {
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.min = today;
+    }
+    
+    // Initialize rating displays
+    initializeRatings();
+});
+</script>
+{% endblock %}

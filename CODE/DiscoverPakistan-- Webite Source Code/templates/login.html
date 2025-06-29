@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}
+{% if is_admin %}Admin Login - Pakistan Tourism{% else %}Login - Pakistan Tourism{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto">
+    <div class="bg-white rounded-lg shadow-md p-8">
+        <div class="text-center mb-6">
+            {% if is_admin %}
+                <div class="w-16 h-16 bg-pakistan-green rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-user-shield text-white text-2xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-800">Admin Login</h2>
+                <p class="text-gray-600">Access the admin dashboard</p>
+            {% else %}
+                <div class="w-16 h-16 bg-pakistan-green rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-user text-white text-2xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-800">Welcome Back</h2>
+                <p class="text-gray-600">Sign in to your account</p>
+            {% endif %}
+        </div>
+        
+        <form method="POST" class="space-y-4">
+            {{ form.hidden_tag() }}
+            
+            <div>
+                {{ form.email.label(class="block text-sm font-medium text-gray-700 mb-1") }}
+                {{ form.email(class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pakistan-green focus:border-transparent") }}
+                {% if form.email.errors %}
+                    <div class="text-red-500 text-sm mt-1">
+                        {% for error in form.email.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div>
+                {{ form.password.label(class="block text-sm font-medium text-gray-700 mb-1") }}
+                {{ form.password(class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pakistan-green focus:border-transparent") }}
+                {% if form.password.errors %}
+                    <div class="text-red-500 text-sm mt-1">
+                        {% for error in form.password.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div>
+                {{ form.submit(class="w-full bg-pakistan-green text-white py-2 px-4 rounded-md hover:bg-pakistan-light focus:outline-none focus:ring-2 focus:ring-pakistan-green focus:ring-offset-2 transition-colors") }}
+            </div>
+        </form>
+        
+        {% if not is_admin %}
+        <div class="text-center mt-6">
+            <p class="text-gray-600">Don't have an account? 
+                <a href="{{ url_for('register') }}" class="text-pakistan-green hover:text-pakistan-light font-medium">Sign up here</a>
+            </p>
+        </div>
+        
+        <div class="text-center mt-4">
+            <a href="{{ url_for('admin_login') }}" class="text-sm text-gray-500 hover:text-pakistan-green">
+                <i class="fas fa-user-shield mr-1"></i>Admin Login
+            </a>
+        </div>
+        {% else %}
+        <div class="text-center mt-6">
+            <a href="{{ url_for('login') }}" class="text-pakistan-green hover:text-pakistan-light font-medium">
+                <i class="fas fa-arrow-left mr-1"></i>Back to User Login
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

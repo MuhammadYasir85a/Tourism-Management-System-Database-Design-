@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block title %}{{ hotel.name }} - Pakistan Tourism{% endblock %}
+
+{% block content %}
+<!-- Hotel Header -->
+<div class="bg-white rounded-lg shadow-md overflow-hidden mb-8">
+    <div class="relative h-64 md:h-96 bg-gray-200">
+        {% if hotel.imageURL %}
+            <img src="{{ hotel.imageURL }}" alt="{{ hotel.name }}" class="w-full h-full object-cover">
+        {% else %}
+            <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-mountain-blue to-pakistan-light">
+                <i class="fas fa-hotel text-white text-6xl"></i>
+            </div>
+        {% endif %}
+        <div class="absolute inset-0 bg-black bg-opacity-40"></div>
+        <div class="absolute bottom-0 left-0 right-0 p-6 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-4xl font-bold mb-2">{{ hotel.name }}</h1>
+                    <p class="text-lg mb-2">
+                        <i class="fas fa-map-marker-alt mr-1"></i>
+                        {{ hotel.street }}, {{ hotel.city }}
+                    </p>
+                </div>
+                {% if current_user.is_authenticated %}
+                <div>
+                    <a href="{{ url_for('book_hotel', hotel_id=hotel.hotelID) }}" class="bg-heritage-gold text-pakistan-green px-6 py-3 rounded-lg font-semibold hover:bg-yellow-400 transition-all">
+                        <i class="fas fa-calendar-check mr-2"></i>Book Now
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hotel Content -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Main Content -->
+    <div class="lg:col-span-2">
+        <!-- Facilities -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-concierge-bell mr-2"></i>Facilities & Amenities
+            </h2>
+            {% if hotel.facilities %}
+                <p class="text-gray-700 leading-relaxed">{{ hotel.facilities }}</p>
+            {% else %}
+                <p class="text-gray-500 italic">No facilities information available.</p>
+            {% endif %}
+        </div>
+
+        <!-- Reviews -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-gray-800">
+                    <i class="fas fa-star mr-2"></i>Reviews ({{ reviews|length }})
+                </h2>
+                {% if current_user.is_authenticated %}
+                <a href="{{ url_for('submit_review', review_type='hotel', item_id=hotel.hotelID) }}" class="bg-pakistan-green text-white px-4 py-2 rounded hover:bg-pakistan-light transition-colors">
+                    <i class="fas fa-plus mr-1"></i>Write Review
+                </a>
+                {% endif %}
+            </div>
+            
+            {% if reviews %}
+                <div class="space-y-4">
+                    {% for review in reviews %}
+                    <div class="border-b border-gray-200 pb-4 last:border-b-0">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 bg-mountain-blue rounded-full flex items-center justify-center mr-3">
+                                    <i class="fas fa-user text-white text-sm"></i>
+                                </div>
+                                <span class="font-medium text-gray-800">{{ review.user.name }}</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="flex text-yellow-400 mr-2">
+                                    {% for i in range(review.rating) %}
+                                        <i class="fas fa-star"></i>
+                                    {% endfor %}
+                                    {% for i in range(5 - review.rating) %}
+                                        <i class="far fa-star"></i>
+                                    {% endfor %}
+                                </div>
+                                <span class="text-sm text-gray-500">{{ review.reviewDate.strftime('%B %d, %Y') if review.reviewDate else '' }}</span>
+                            </div>
+                        </div>
+                        {% if review.comment %}
+                        <p class="text-gray-700">{{ review.comment }}</p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-8">
+                    <i class="fas fa-star text-gray-400 text-4xl mb-4"></i>
+                    <h3 class="text-lg font-semibold text-gray-600 mb-2">No Reviews Yet</h3>
+                    <p class="text-gray-500">Be the first to review this hotel!</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="lg:col-span-1">
+        <!-- Quick Info -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">Hotel Information</h3>
+            <div class="space-y-3">
+                <div class="flex items-start">
+                    <i class="fas fa-map-marker-alt text-mountain-blue mt-1 mr-3"></i>
+                    <div>
+                        <p class="font-medium text-gray-800">Address</p>
+                        <p class="text-gray-600 text-sm">{{ hotel.street }}, {{ hotel.city }}</p>
+                    </div>
+                </div>
+                <div class="flex items-start">
+                    <i class="fas fa-hotel text-mountain-blue mt-1 mr-3"></i>
+                    <div>
+                        <p class="font-medium text-gray-800">Hotel Name</p>
+                        <p class="text-gray-600 text-sm">{{ hotel.name }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Room Types -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">Available Room Types</h3>
+            <div class="space-y-2">
+                <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                    <span class="text-gray-700">Standard</span>
+                    <span class="text-pakistan-green font-medium">$80/night</span>
+                </div>
+                <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                    <span class="text-gray-700">Deluxe</span>
+                    <span class="text-pakistan-green font-medium">$120/night</span>
+                </div>
+                <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                    <span class="text-gray-700">Executive</span>
+                    <span class="text-pakistan-green font-medium">$150/night</span>
+                </div>
+                <div class="flex justify-between items-center py-2">
+                    <span class="text-gray-700">Suite</span>
+                    <span class="text-pakistan-green font-medium">$200/night</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Booking Actions -->
+        {% if current_user.is_authenticated %}
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">Book This Hotel</h3>
+            <div class="space-y-3">
+                <a href="{{ url_for('book_hotel', hotel_id=hotel.hotelID) }}" class="w-full bg-heritage-gold text-pakistan-green py-3 px-4 rounded hover:bg-yellow-400 transition-colors text-center block font-semibold">
+                    <i class="fas fa-calendar-check mr-2"></i>Book Now
+                </a>
+                <a href="{{ url_for('submit_review', review_type='hotel', item_id=hotel.hotelID) }}" class="w-full bg-pakistan-green text-white py-2 px-4 rounded hover:bg-pakistan-light transition-colors text-center block">
+                    <i class="fas fa-star mr-2"></i>Write a Review
+                </a>
+            </div>
+        </div>
+        {% else %}
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">Book This Hotel</h3>
+            <p class="text-gray-600 mb-4">Please log in to book this hotel.</p>
+            <a href="{{ url_for('login') }}" class="w-full bg-pakistan-green text-white py-3 px-4 rounded hover:bg-pakistan-light transition-colors text-center block">
+                <i class="fas fa-sign-in-alt mr-2"></i>Login to Book
+            </a>
+        </div>
+        {% endif %}
+
+        <!-- More Hotels -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">More Hotels in {{ hotel.city }}</h3>
+            <p class="text-gray-600 text-sm">Discover other accommodations in {{ hotel.city }}</p>
+            <div class="mt-4">
+                <a href="{{ url_for('hotels', city=hotel.city) }}" class="w-full bg-mountain-blue text-white py-2 px-4 rounded hover:bg-blue-600 transition-colors text-center block">
+                    <i class="fas fa-hotel mr-2"></i>Browse Hotels in {{ hotel.city }}
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
